@@ -148,6 +148,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="SkiaSharp">
+      <Version>1.59.1</Version>
+    </PackageReference>
     <PackageReference Include="Xamarin.FFImageLoading.Svg.Forms">
       <Version>2.3.4</Version>
     </PackageReference>
