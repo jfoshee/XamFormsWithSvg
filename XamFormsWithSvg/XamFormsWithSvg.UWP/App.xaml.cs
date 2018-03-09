@@ -1,18 +1,11 @@
-﻿using System;
+﻿using FFImageLoading;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Reflection;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace XamFormsWithSvg.UWP
@@ -51,8 +44,24 @@ namespace XamFormsWithSvg.UWP
                 rootFrame = new Frame();
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
+                var assembliesToInclude = new List<Assembly>();
 
-                Xamarin.Forms.Forms.Init(e);
+                #region FFImageLoading for SVG Support
+                FFImageLoading.Forms.WinUWP.CachedImageRenderer.Init();
+                var config = new FFImageLoading.Config.Configuration()
+                {
+                    VerboseLogging = false,
+                    VerbosePerformanceLogging = false,
+                    VerboseMemoryCacheLogging = false,
+                    VerboseLoadingCancelledLogging = false,
+                    // Setting a logger is very important to troubleshoot problems e.g. if SVG images do not show up
+                    Logger = new CustomLogger(),
+                };
+                ImageService.Instance.Initialize(config);
+                assembliesToInclude.Add(typeof(FFImageLoading.Forms.WinUWP.CachedImageRenderer).GetTypeInfo().Assembly);
+                #endregion
+
+                Xamarin.Forms.Forms.Init(e, assembliesToInclude);
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
@@ -96,6 +105,24 @@ namespace XamFormsWithSvg.UWP
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+    }
+
+    public class CustomLogger : FFImageLoading.Helpers.IMiniLogger
+    {
+        public void Debug(string message)
+        {
+            System.Diagnostics.Debug.WriteLine(message);
+        }
+
+        public void Error(string errorMessage)
+        {
+            System.Diagnostics.Debug.WriteLine(errorMessage);
+        }
+
+        public void Error(string errorMessage, Exception ex)
+        {
+            Error(errorMessage + System.Environment.NewLine + ex.ToString());
         }
     }
 }
